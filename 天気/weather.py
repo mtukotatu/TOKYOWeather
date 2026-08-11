@@ -37,14 +37,17 @@ def get_weather():
 
     data = response.json()
 
-    # 気象庁JSONから東京地方を探す
-    for series in data[0].get("timeSeries", []):
-        for area in series.get("areas", []):
+    print("気象庁データを取得しました")
 
+    for i, series in enumerate(data[0].get("timeSeries", [])):
+        print(f"timeSeries {i}")
+
+        for area in series.get("areas", []):
             area_name = area.get("area", {}).get("name", "")
 
-            if area_name == "東京地方":
+            print(f"  地域: {area_name}")
 
+            if area_name == "東京地方":
                 weather_list = area.get("weathers", [])
                 code_list = area.get("weatherCodes", [])
 
@@ -58,12 +61,15 @@ def get_weather():
                 else:
                     weather_code = 2
 
+                print(f"東京地方を発見！")
+                print(f"天気: {weather}")
+                print(f"コード: {weather_code}")
+
                 return weather, weather_code
 
     raise RuntimeError(
-        "東京の天気データが見つかりませんでした。"
+        "東京地方の天気データが見つかりませんでした。"
     )
-
 
 # =========================================================
 # 天気コードをScratch用の数字に変換
