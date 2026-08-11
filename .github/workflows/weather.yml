@@ -16,17 +16,18 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: "3.12"
 
       - name: Install dependencies
         run: |
           cd 天気
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Run TOKYOWeather
         env:
-          USERNAME: ${{ secrets.SCRATCH_USERNAME }}
-          SESSION_ID: ${{ secrets.SCRATCH_SESSION_ID }}
+          SCRATCH_USERNAME: ${{ secrets.SCRATCH_USERNAME }}
+          SCRATCH_SESSION_ID: ${{ secrets.SCRATCH_SESSION_ID }}
           PROJECT_ID: ${{ secrets.PROJECT_ID }}
         run: |
           cd 天気
