@@ -20,10 +20,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd weather
+          cd 天気
           pip install -r requirements.txt
 
       - name: Run TOKYOWeather
         run: |
-          cd weather
+          cd 天気
           python weather.py
