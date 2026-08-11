@@ -260,53 +260,93 @@ def connect_scratch():
 # クラウド変数更新
 # =========================================================
 
-def update_cloud_variable(
-    session,
-    value
-):
+def update_cloud_variable(session, value):
 
     print()
     print(
-        f"クラウド変数 "
-        f"{CLOUD_VARIABLE} を "
+        f"クラウド変数 {CLOUD_VARIABLE} を "
         f"{value} に変更します..."
     )
 
-    # -----------------------------------------------------
-    # Scratch Cloudに接続
-    # -----------------------------------------------------
+    # Scratchクラウドへ接続
+    print("Scratchクラウドへ接続しています...")
 
+    cloud = session.connect_scratch_cloud(
+        PROJECT_ID
+    )
+
+    print("Scratchクラウドに接続しました！")
+
+    # 現在の値を確認
     try:
-
-        print(
-            "Scratchクラウドへ接続しています..."
-        )
-
-        cloud = session.connect_scratch_cloud(
-            PROJECT_ID
+        before = cloud.get_var(
+            CLOUD_VARIABLE
         )
 
         print(
-            "Scratchクラウドに接続しました！"
+            f"変更前の {CLOUD_VARIABLE}: "
+            f"{before}"
         )
 
     except Exception as e:
-
-        print()
         print(
-            "================================"
+            f"変更前の値を取得できませんでした: {e}"
+        )
+
+    # 書き込み
+    print(
+        f"{CLOUD_VARIABLE} に {value} を送信します..."
+    )
+
+    cloud.set_var(
+        CLOUD_VARIABLE,
+        str(value)
+    )
+
+    print(
+        "set_var() を実行しました！"
+    )
+
+    # 少し待つ
+    import time
+    time.sleep(2)
+
+    # 書き込んだ値を読み返す
+    try:
+
+        after = cloud.get_var(
+            CLOUD_VARIABLE
         )
 
         print(
-            "Scratchクラウド接続エラー"
+            f"変更後の {CLOUD_VARIABLE}: "
+            f"{after}"
         )
 
-        print(
-            "================================"
-        )
+        if str(after) == str(value):
+
+            print(
+                "✅ クラウド変数の更新を確認しました！"
+            )
+
+        else:
+
+            print(
+                "⚠️ 書き込み後の値が一致しません！"
+            )
+
+            print(
+                f"期待値: {value}"
+            )
+
+            print(
+                f"実際の値: {after}"
+            )
+
+    except Exception as e:
 
         print(
-            f"プロジェクトID: {PROJECT_ID}"
+            "書き込み後の値を取得できませんでした"
         )
 
         print(
@@ -316,78 +356,6 @@ def update_cloud_variable(
         print(
             f"エラー内容: {e}"
         )
-
-        print(
-            "================================"
-        )
-
-        raise
-
-    # -----------------------------------------------------
-    # クラウド変数に書き込み
-    # -----------------------------------------------------
-
-    try:
-
-        print(
-            f"{CLOUD_VARIABLE} に "
-            f"{value} を送信しています..."
-        )
-
-        cloud.set_var(
-            CLOUD_VARIABLE,
-            value
-        )
-
-        print()
-        print(
-            "クラウド変数を更新しました！"
-        )
-
-        print(
-            f"変数: {CLOUD_VARIABLE}"
-        )
-
-        print(
-            f"値: {value}"
-        )
-
-    except Exception as e:
-
-        print()
-        print(
-            "================================"
-        )
-
-        print(
-            "クラウド変数更新エラー"
-        )
-
-        print(
-            "================================"
-        )
-
-        print(
-            f"変数名: {CLOUD_VARIABLE}"
-        )
-
-        print(
-            f"値: {value}"
-        )
-
-        print(
-            f"エラー種類: {type(e).__name__}"
-        )
-
-        print(
-            f"エラー内容: {e}"
-        )
-
-        print(
-            "================================"
-        )
-
-        raise
 
     finally:
 
