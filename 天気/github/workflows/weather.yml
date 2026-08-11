@@ -1,9 +1,8 @@
-name: TOKYOWeather
+name: Tokyo Weather
 
 on:
   schedule:
     - cron: "*/5 * * * *"
-
   workflow_dispatch:
 
 jobs:
@@ -20,13 +19,11 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
       - name: Update Scratch weather
         env:
           SCRATCH_USERNAME: ${{ secrets.SCRATCH_USERNAME }}
           SCRATCH_SESSION_ID: ${{ secrets.SCRATCH_SESSION_ID }}
           SCRATCH_PROJECT_ID: ${{ secrets.SCRATCH_PROJECT_ID }}
-        run: |
-          python weather.py
+        run: python weather.py
