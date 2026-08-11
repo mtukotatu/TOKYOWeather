@@ -1,4 +1,4 @@
-name: Tokyo Weather
+name: TOKYOWeather
 
 on:
   schedule:
@@ -6,24 +6,24 @@ on:
   workflow_dispatch:
 
 jobs:
-  update-weather:
+  weather:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.x"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          cd weather
+          pip install -r requirements.txt
 
-      - name: Update Scratch weather
-        env:
-          SCRATCH_USERNAME: ${{ secrets.SCRATCH_USERNAME }}
-          SCRATCH_SESSION_ID: ${{ secrets.SCRATCH_SESSION_ID }}
-          SCRATCH_PROJECT_ID: ${{ secrets.SCRATCH_PROJECT_ID }}
-        run: python weather.py
+      - name: Run TOKYOWeather
+        run: |
+          cd weather
+          python weather.py
