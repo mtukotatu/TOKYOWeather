@@ -23,74 +23,35 @@ JMA_URL = "https://www.jma.go.jp/bosai/forecast/data/forecast/130000.json"
 # 東京の天気を取得
 # =========================================================
 
-def get_weather():
+def connect_scratch():
 
-    print("気象庁からデータを取得しています...")
+    if not SESSION_ID:
+        raise RuntimeError(
+            "SCRATCH_SESSION_ID が設定されていません。"
+        )
 
-    response = requests.get(
-        JMA_URL,
-        timeout=30,
-        headers={
-            "User-Agent": "TOKYOWeather/1.0"
-        }
-    )
+    print("Scratchに接続しています...")
+    print(f"プロジェクトID: {PROJECT_ID}")
+    print(f"セッションID: {'設定済み' if SESSION_ID else '未設定'}")
 
-    response.raise_for_status()
+    session = sa.Session(SESSION_ID)
 
-    data = response.json()
+    print("Scratchセッション作成完了")
 
-    print("気象庁データを取得しました")
+    try:
+        project = session.connect_project(PROJECT_ID)
+    except Exception as e:
+        print()
+        print("プロジェクト接続に失敗しました")
+        print(f"エラー種類: {type(e).__name__}")
+        print(f"エラー内容: {e}")
+        print()
+        print("プロジェクトIDを確認してください")
+        raise
 
-    # -----------------------------------------------------
-    # timeSeriesを検索
-    # -----------------------------------------------------
+    print("Scratchプロジェクトに接続しました！")
 
-    for series_index, series in enumerate(
-        data[0].get("timeSeries", [])
-    ):
-
-        print(f"timeSeries {series_index}")
-
-        for area in series.get("areas", []):
-
-            area_info = area.get("area", {})
-
-            area_name = area_info.get("name", "")
-
-            print(f"  地域: {area_name}")
-
-            # 東京地方を発見
-            if area_name == "東京地方":
-
-                weather_list = area.get(
-                    "weathers",
-                    []
-                )
-
-                code_list = area.get(
-                    "weatherCodes",
-                    []
-                )
-
-                if not weather_list:
-                    continue
-
-                weather = weather_list[0]
-
-                if code_list:
-                    weather_code = int(
-                        code_list[0]
-                    )
-                else:
-                    weather_code = 2
-
-                print("東京地方を発見しました！")
-                print(f"天気: {weather}")
-                print(
-                    f"気象庁コード: {weather_code}"
-                )
-
-                return weather, weather_code
+    return project
 
     # -----------------------------------------------------
     # 見つからなかった場合
