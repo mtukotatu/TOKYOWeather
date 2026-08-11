@@ -24,6 +24,10 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run TOKYOWeather
+        env:
+          USERNAME: ${{ secrets.USERNAME }}
+          SESSION_ID: ${{ secrets.SESSION_ID }}
+          PROJECT_ID: ${{ secrets.PROJECT_ID }}
         run: |
           cd 天気
           python weather.py
