@@ -12,11 +12,10 @@ PROJECT_ID = "1368004496"
 # GitHub Actions Secrets
 SESSION_ID = os.environ.get("SCRATCH_SESSION_ID")
 
-# Scratchのクラウド変数名
-# 「☁」は付けない
+# Scratchクラウド変数
 CLOUD_VARIABLE = "TokyoWeather"
 
-# 気象庁 東京
+# 気象庁・東京
 JMA_URL = (
     "https://www.jma.go.jp/"
     "bosai/forecast/data/forecast/130000.json"
@@ -44,10 +43,6 @@ def get_weather():
     data = response.json()
 
     print("気象庁データを取得しました")
-
-    # -----------------------------------------------------
-    # 東京地方を探す
-    # -----------------------------------------------------
 
     for series_index, series in enumerate(
         data[0].get("timeSeries", [])
@@ -106,10 +101,6 @@ def get_weather():
 
             return weather, weather_code
 
-    # -----------------------------------------------------
-    # 東京が見つからなかった場合
-    # -----------------------------------------------------
-
     print()
     print("取得した地域一覧:")
 
@@ -139,7 +130,7 @@ def get_weather():
 
 
 # =========================================================
-# 天気をScratch用の数字に変換
+# Scratch用天気コードへ変換
 # =========================================================
 
 def convert_weather_code(
@@ -173,17 +164,13 @@ def convert_weather_code(
 
 
 # =========================================================
-# Scratch Sessionを作成
+# Scratchにログイン
 # =========================================================
 
 def connect_scratch():
 
     print()
     print("Scratchに接続しています...")
-
-    # -----------------------------------------------------
-    # Session ID確認
-    # -----------------------------------------------------
 
     if not SESSION_ID:
 
@@ -206,24 +193,35 @@ def connect_scratch():
     )
 
     # -----------------------------------------------------
-    # Session作成
+    # 重要
+    #
+    # Session(SESSION_ID) ではなく
+    # login_by_id() を使う
     # -----------------------------------------------------
 
     try:
 
-        session = sa.Session(
+        session = sa.login_by_id(
             SESSION_ID
         )
 
         print(
-            "Scratchセッション作成完了"
+            "Scratchログイン成功"
         )
 
     except Exception as e:
 
         print()
         print(
-            "Scratchセッション作成エラー"
+            "================================"
+        )
+
+        print(
+            "Scratchログインエラー"
+        )
+
+        print(
+            "================================"
         )
 
         print(
@@ -234,13 +232,32 @@ def connect_scratch():
             f"エラー内容: {e}"
         )
 
+        print(
+            "================================"
+        )
+
         raise
+
+    # -----------------------------------------------------
+    # セッションIDが実際に入っているか確認
+    # -----------------------------------------------------
+
+    if not session.id:
+
+        raise RuntimeError(
+            "Scratch Sessionは作成されましたが、"
+            "session.id が空です。"
+        )
+
+    print(
+        "ScratchセッションID確認OK"
+    )
 
     return session
 
 
 # =========================================================
-# Scratchクラウド変数を更新
+# クラウド変数更新
 # =========================================================
 
 def update_cloud_variable(
@@ -256,9 +273,7 @@ def update_cloud_variable(
     )
 
     # -----------------------------------------------------
-    # Scratch Cloudへ直接接続
-    #
-    # connect_project() は使わない
+    # Scratch Cloudに接続
     # -----------------------------------------------------
 
     try:
@@ -281,9 +296,11 @@ def update_cloud_variable(
         print(
             "================================"
         )
+
         print(
             "Scratchクラウド接続エラー"
         )
+
         print(
             "================================"
         )
@@ -307,7 +324,7 @@ def update_cloud_variable(
         raise
 
     # -----------------------------------------------------
-    # クラウド変数更新
+    # クラウド変数に書き込み
     # -----------------------------------------------------
 
     try:
@@ -341,9 +358,11 @@ def update_cloud_variable(
         print(
             "================================"
         )
+
         print(
             "クラウド変数更新エラー"
         )
+
         print(
             "================================"
         )
@@ -424,7 +443,7 @@ def main():
     )
 
     # -----------------------------------------------------
-    # Scratch Session
+    # Scratchログイン
     # -----------------------------------------------------
 
     session = connect_scratch()
