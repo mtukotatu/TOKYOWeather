@@ -9,10 +9,10 @@ import scratchattach as sa
 
 PROJECT_ID = "1368004496"
 
-# GitHub Actions の Secrets から取得
+# GitHub Actions の Secrets
 SESSION_ID = os.environ.get("SCRATCH_SESSION_ID")
 
-# Scratchのクラウド変数名
+# Scratchのクラウド変数
 CLOUD_VARIABLE = "TokyoWeather"
 
 # 気象庁・東京
@@ -23,48 +23,104 @@ JMA_URL = "https://www.jma.go.jp/bosai/forecast/data/forecast/130000.json"
 # 東京の天気を取得
 # =========================================================
 
-def connect_scratch():
+def get_weather():
 
-    if not SESSION_ID:
-        raise RuntimeError(
-            "SCRATCH_SESSION_ID が設定されていません。"
-        )
+    print("気象庁からデータを取得しています...")
 
-    print("Scratchに接続しています...")
-    print(f"プロジェクトID: {PROJECT_ID}")
-    print(f"セッションID: {'設定済み' if SESSION_ID else '未設定'}")
+    response = requests.get(
+        JMA_URL,
+        timeout=30,
+        headers={
+            "User-Agent": "TOKYOWeather/1.0"
+        }
+    )
 
-    session = sa.Session(SESSION_ID)
+    response.raise_for_status()
 
-    print("Scratchセッション作成完了")
+    data = response.json()
 
-    try:
-        project = session.connect_project(PROJECT_ID)
-    except Exception as e:
-        print()
-        print("プロジェクト接続に失敗しました")
-        print(f"エラー種類: {type(e).__name__}")
-        print(f"エラー内容: {e}")
-        print()
-        print("プロジェクトIDを確認してください")
-        raise
+    print("気象庁データを取得しました")
 
-    print("Scratchプロジェクトに接続しました！")
+    # -----------------------------------------------------
+    # 東京地方を探す
+    # -----------------------------------------------------
 
-    return project
+    for series_index, series in enumerate(
+        data[0].get("timeSeries", [])
+    ):
+
+        print(f"timeSeries {series_index}")
+
+        for area in series.get("areas", []):
+
+            area_info = area.get("area", {})
+
+            area_name = area_info.get(
+                "name",
+                ""
+            )
+
+            print(f"  地域: {area_name}")
+
+            if area_name == "東京地方":
+
+                weather_list = area.get(
+                    "weathers",
+                    []
+                )
+
+                code_list = area.get(
+                    "weatherCodes",
+                    []
+                )
+
+                if not weather_list:
+                    continue
+
+                weather = weather_list[0]
+
+                if code_list:
+
+                    weather_code = int(
+                        code_list[0]
+                    )
+
+                else:
+
+                    weather_code = 2
+
+                print(
+                    "東京地方を発見しました！"
+                )
+
+                print(
+                    f"天気: {weather}"
+                )
+
+                print(
+                    f"気象庁コード: {weather_code}"
+                )
+
+                return weather, weather_code
 
     # -----------------------------------------------------
     # 見つからなかった場合
     # -----------------------------------------------------
 
     print()
-    print("取得したエリア一覧:")
+    print("取得した地域一覧:")
 
-    for series in data[0].get("timeSeries", []):
+    for series in data[0].get(
+        "timeSeries",
+        []
+    ):
 
-        for area in series.get("areas", []):
+        for area in series.get(
+            "areas",
+            []
+        ):
 
-            area_name = area.get(
+            name = area.get(
                 "area",
                 {}
             ).get(
@@ -72,7 +128,9 @@ def connect_scratch():
                 ""
             )
 
-            print(f" - {area_name}")
+            print(
+                f" - {name}"
+            )
 
     raise RuntimeError(
         "東京地方の天気データが見つかりませんでした。"
@@ -80,7 +138,7 @@ def connect_scratch():
 
 
 # =========================================================
-# 天気コードをScratch用の数字に変換
+# Scratch用天気コードへ変換
 # =========================================================
 
 def convert_weather_code(
@@ -99,25 +157,35 @@ def convert_weather_code(
         and "雨" not in weather
         and "雪" not in weather
     ):
+
         return 1
 
     # 雨
     if "雨" in weather:
+
         return 3
 
     # 雪
     if "雪" in weather:
+
         return 4
 
-    # それ以外（くもりなど）
+    # くもりなど
     return 2
 
 
 # =========================================================
-# Scratchに接続
+# Scratchへ接続
 # =========================================================
 
 def connect_scratch():
+
+    print()
+    print("Scratchに接続しています...")
+
+    # -----------------------------------------------------
+    # Session ID確認
+    # -----------------------------------------------------
 
     if not SESSION_ID:
 
@@ -127,23 +195,102 @@ def connect_scratch():
             "SCRATCH_SESSION_ID を設定してください。"
         )
 
-    print("Scratchに接続しています...")
-
-    session = sa.Session(
-        SESSION_ID
+    print(
+        "SCRATCH_SESSION_ID: 設定済み"
     )
 
-    project = session.connect_project(
-        PROJECT_ID
+    print(
+        f"プロジェクトID: {PROJECT_ID}"
     )
 
-    print("Scratchに接続しました！")
+    print(
+        f"クラウド変数: {CLOUD_VARIABLE}"
+    )
+
+    # -----------------------------------------------------
+    # Scratch Session
+    # -----------------------------------------------------
+
+    try:
+
+        session = sa.Session(
+            SESSION_ID
+        )
+
+        print(
+            "Scratchセッション作成完了"
+        )
+
+    except Exception as e:
+
+        print(
+            "Scratchセッションの作成に失敗しました"
+        )
+
+        print(
+            f"エラー種類: {type(e).__name__}"
+        )
+
+        print(
+            f"エラー内容: {e}"
+        )
+
+        raise
+
+    # -----------------------------------------------------
+    # プロジェクト取得
+    # -----------------------------------------------------
+
+    try:
+
+        print(
+            "Scratchプロジェクトを取得しています..."
+        )
+
+        project = session.connect_project(
+            PROJECT_ID
+        )
+
+        print(
+            "Scratchプロジェクトに接続しました！"
+        )
+
+    except Exception as e:
+
+        print()
+        print(
+            "================================"
+        )
+        print(
+            "Scratchプロジェクト接続エラー"
+        )
+        print(
+            "================================"
+        )
+
+        print(
+            f"プロジェクトID: {PROJECT_ID}"
+        )
+
+        print(
+            f"エラー種類: {type(e).__name__}"
+        )
+
+        print(
+            f"エラー内容: {e}"
+        )
+
+        print(
+            "================================"
+        )
+
+        raise
 
     return project
 
 
 # =========================================================
-# クラウド変数を書き換え
+# クラウド変数を更新
 # =========================================================
 
 def update_cloud_variable(
@@ -151,22 +298,81 @@ def update_cloud_variable(
     value
 ):
 
+    print()
     print(
         f"クラウド変数 "
-        f"{CLOUD_VARIABLE} を "
-        f"{value} に変更します..."
+        f"{CLOUD_VARIABLE} "
+        f"を {value} に変更します..."
     )
 
-    cloud = project.cloud
+    # -----------------------------------------------------
+    # Cloud接続
+    # -----------------------------------------------------
 
-    cloud.set_var(
-        CLOUD_VARIABLE,
-        value
-    )
+    try:
 
-    print(
-        "クラウド変数を更新しました！"
-    )
+        cloud = project.cloud
+
+        print(
+            "Scratchクラウド接続完了"
+        )
+
+    except Exception as e:
+
+        print(
+            "Scratchクラウドへの接続に失敗しました"
+        )
+
+        print(
+            f"エラー種類: {type(e).__name__}"
+        )
+
+        print(
+            f"エラー内容: {e}"
+        )
+
+        raise
+
+    # -----------------------------------------------------
+    # クラウド変数更新
+    # -----------------------------------------------------
+
+    try:
+
+        cloud.set_var(
+            CLOUD_VARIABLE,
+            value
+        )
+
+        print(
+            f"クラウド変数 "
+            f"{CLOUD_VARIABLE} "
+            f"を {value} に更新しました！"
+        )
+
+    except Exception as e:
+
+        print(
+            "クラウド変数の更新に失敗しました"
+        )
+
+        print(
+            f"変数名: {CLOUD_VARIABLE}"
+        )
+
+        print(
+            f"値: {value}"
+        )
+
+        print(
+            f"エラー種類: {type(e).__name__}"
+        )
+
+        print(
+            f"エラー内容: {e}"
+        )
+
+        raise
 
 
 # =========================================================
@@ -175,14 +381,24 @@ def update_cloud_variable(
 
 def main():
 
+    print()
+    print(
+        "================================"
+    )
+
     print(
         "TOKYOWeatherを開始します"
+    )
+
+    print(
+        "================================"
     )
 
     # -----------------------------------------------------
     # 天気取得
     # -----------------------------------------------------
 
+    print()
     print(
         "東京の天気を取得しています..."
     )
@@ -190,8 +406,13 @@ def main():
     weather, jma_code = get_weather()
 
     print()
-    print("東京の天気:")
-    print(weather)
+    print(
+        "東京の天気:"
+    )
+
+    print(
+        weather
+    )
 
     print(
         f"気象庁コード: {jma_code}"
@@ -227,13 +448,23 @@ def main():
         weather_code
     )
 
+    # -----------------------------------------------------
+    # 完了
+    # -----------------------------------------------------
+
     print()
     print(
         "================================"
     )
+
     print(
         "東京の天気をScratchへ送信しました！"
     )
+
+    print(
+        f"送信値: {weather_code}"
+    )
+
     print(
         "================================"
     )
