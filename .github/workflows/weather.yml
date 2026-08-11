@@ -25,8 +25,8 @@ jobs:
 
       - name: Run TOKYOWeather
         env:
-          USERNAME: ${{ secrets.USERNAME }}
-          SESSION_ID: ${{ secrets.SESSION_ID }}
+          USERNAME: ${{ secrets.SCRATCH_USERNAME }}
+          SESSION_ID: ${{ secrets.SCRATCH_SESSION_ID }}
           PROJECT_ID: ${{ secrets.PROJECT_ID }}
         run: |
           cd 天気
