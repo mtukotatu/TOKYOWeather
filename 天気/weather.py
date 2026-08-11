@@ -1,9 +1,7 @@
 import requests
 import time
 import scratchattach as sa
-
 import os
-
 USERNAME = os.environ["USERNAME"]
 SESSION_ID = os.environ["SESSION_ID"]
 PROJECT_ID = os.environ["PROJECT_ID"]
