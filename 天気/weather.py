@@ -1,4 +1,5 @@
 import os
+import time
 import scratchattach as sa
 
 
@@ -59,7 +60,7 @@ def check_config():
     if SCRATCH_USERNAME:
 
         print(
-            f"SCRATCH_USERNAME: {SCRATCH_USERNAME}"
+            "SCRATCH_USERNAME: 設定済み"
         )
 
     else:
@@ -164,7 +165,11 @@ def check_logged_in_user(session):
 
         if SCRATCH_USERNAME:
 
-            if username == SCRATCH_USERNAME:
+            # 前後の空白を除去して比較
+            secret_username = SCRATCH_USERNAME.strip()
+            actual_username = username.strip()
+
+            if actual_username == secret_username:
 
                 print(
                     "✅ Scratchユーザー名が一致しました"
@@ -177,12 +182,13 @@ def check_logged_in_user(session):
                     "⚠️ Scratchユーザー名が一致しません"
                 )
 
+                # Secretsの中身は表示しない
                 print(
-                    f"Secrets: {SCRATCH_USERNAME}"
+                    "Secretsに設定されたユーザー名を確認してください"
                 )
 
                 print(
-                    f"実際:    {username}"
+                    f"実際: {actual_username}"
                 )
 
         return username
@@ -336,6 +342,10 @@ def check_cloud_logs(cloud):
                 "⚠️ Cloudログが0件です"
             )
 
+            print(
+                "Scratch Cloudログがまだ取得できない可能性があります。"
+            )
+
             return
 
         print()
@@ -348,11 +358,6 @@ def check_cloud_logs(cloud):
             print(
                 f"--- Log {index} ---"
             )
-
-            # -------------------------------------------------
-            # scratchattachのバージョンによって
-            # 属性が違う可能性があるため安全に取得
-            # -------------------------------------------------
 
             print(
                 f"時刻: "
@@ -384,6 +389,55 @@ def check_cloud_logs(cloud):
         print()
         print(
             "⚠️ Cloudログ取得中にエラーが発生しました"
+        )
+
+        print(
+            f"エラー種類: {type(e).__name__}"
+        )
+
+        print(
+            f"エラー内容: {e}"
+        )
+
+
+# =========================================================
+# Cloud変数の現在値確認
+# =========================================================
+
+def check_cloud_variable(cloud):
+
+    print()
+    print("================================")
+    print("Cloud変数の現在値を確認します")
+    print("================================")
+
+    try:
+
+        value = cloud.get_var(
+            CLOUD_VARIABLE
+        )
+
+        print(
+            f"☁ {CLOUD_VARIABLE} = {value}"
+        )
+
+        if str(value) == TEST_VALUE:
+
+            print(
+                "✅ Cloud変数の値が正常です"
+            )
+
+        else:
+
+            print(
+                "⚠️ Cloud変数の値が期待値と違います"
+            )
+
+    except Exception as e:
+
+        print()
+        print(
+            "⚠️ Cloud変数の値を取得できませんでした"
         )
 
         print(
@@ -442,6 +496,29 @@ def main():
 
         write_cloud_variable(
             cloud
+        )
+
+        # -------------------------------------------------
+        # Cloud変数の現在値確認
+        # -------------------------------------------------
+
+        check_cloud_variable(
+            cloud
+        )
+
+        # -------------------------------------------------
+        # Cloudログ反映待ち
+        # -------------------------------------------------
+
+        print()
+        print(
+            "Cloudログの反映を待っています..."
+        )
+
+        time.sleep(5)
+
+        print(
+            "5秒経過しました"
         )
 
         # -------------------------------------------------
