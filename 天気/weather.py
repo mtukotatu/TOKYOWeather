@@ -1,25 +1,19 @@
 import os
-import time
 import scratchattach as sa
 
 
 # =========================================================
 # 設定
 # =========================================================
-print(
-    "scratchattach version:",
-    getattr(sa, "__version__", "unknown")
-)
 
-print(
-    "Scratch username:",
-    session.get_linked_user().username
-)
+PROJECT_ID = "1368004496"
 
-PROJECT_ID = "1368672819"
-SESSION_ID = os.environ.get("SCRATCH_SESSION_ID")
+SESSION_ID = os.environ.get(
+    "SCRATCH_SESSION_ID"
+)
 
 CLOUD_VARIABLE = "TokyoWeather"
+
 TEST_VALUE = "3"
 
 
@@ -34,36 +28,134 @@ def main():
     print("Scratch Cloud 書き込み診断")
     print("================================")
 
+    # -----------------------------------------------------
+    # Session ID確認
+    # -----------------------------------------------------
+
     if not SESSION_ID:
+
         raise RuntimeError(
             "SCRATCH_SESSION_ID が設定されていません。"
         )
 
+    print()
+    print(
+        "SCRATCH_SESSION_ID: 設定済み"
+    )
+
+    print(
+        f"プロジェクトID: {PROJECT_ID}"
+    )
+
+    print(
+        f"クラウド変数: {CLOUD_VARIABLE}"
+    )
+
+    print(
+        f"送信値: {TEST_VALUE}"
+    )
+
     # -----------------------------------------------------
-    # ログイン
+    # Scratchログイン
     # -----------------------------------------------------
 
     print()
-    print("Scratchにログインしています...")
-
-    session = sa.login_by_id(
-        SESSION_ID
+    print(
+        "Scratchにログインしています..."
     )
 
-    print("✅ Scratchログイン成功")
+    try:
+
+        session = sa.login_by_id(
+            SESSION_ID
+        )
+
+        print(
+            "✅ Scratchログイン成功"
+        )
+
+    except Exception as e:
+
+        print(
+            "❌ Scratchログイン失敗"
+        )
+
+        print(
+            f"エラー種類: {type(e).__name__}"
+        )
+
+        print(
+            f"エラー内容: {e}"
+        )
+
+        raise
 
     # -----------------------------------------------------
-    # Cloud接続
+    # ログインユーザー確認
+    # -----------------------------------------------------
+
+    try:
+
+        user = session.get_linked_user()
+
+        print()
+        print(
+            "Scratchユーザー:"
+        )
+
+        print(
+            user.username
+        )
+
+    except Exception as e:
+
+        print()
+        print(
+            "⚠️ Scratchユーザー名を取得できませんでした"
+        )
+
+        print(
+            f"エラー種類: {type(e).__name__}"
+        )
+
+        print(
+            f"エラー内容: {e}"
+        )
+
+    # -----------------------------------------------------
+    # Scratch Cloudへ接続
     # -----------------------------------------------------
 
     print()
-    print("Scratch Cloudへ接続しています...")
-
-    cloud = session.connect_scratch_cloud(
-        PROJECT_ID
+    print(
+        "Scratch Cloudへ接続しています..."
     )
 
-    print("✅ Scratch Cloud接続成功")
+    try:
+
+        cloud = session.connect_scratch_cloud(
+            PROJECT_ID
+        )
+
+        print(
+            "✅ Scratch Cloud接続成功"
+        )
+
+    except Exception as e:
+
+        print(
+            "❌ Scratch Cloud接続失敗"
+        )
+
+        print(
+            f"エラー種類: {type(e).__name__}"
+        )
+
+        print(
+            f"エラー内容: {e}"
+        )
+
+        raise
 
     # -----------------------------------------------------
     # 書き込み
@@ -82,90 +174,54 @@ def main():
         f"値: {TEST_VALUE}"
     )
 
-    cloud.set_var(
-        CLOUD_VARIABLE,
-        TEST_VALUE
-    )
-
-    print()
-    print(
-        "✅ set_var() 完了"
-    )
-
-    # -----------------------------------------------------
-    # Cloudログ取得
-    # -----------------------------------------------------
-
-    print()
-    print(
-        "Scratch Cloudのログを確認しています..."
-    )
-
-    time.sleep(3)
-
     try:
 
-        logs = cloud.logs(
-            filter_by_var_named=CLOUD_VARIABLE,
-            limit=20
+        cloud.set_var(
+            CLOUD_VARIABLE,
+            TEST_VALUE
         )
 
         print()
         print(
-            f"取得したログ数: {len(logs)}"
+            "✅ set_var() が正常に実行されました！"
         )
-
-        print()
-        print(
-            "================================"
-        )
-        print(
-            "Cloudログ"
-        )
-        print(
-            "================================"
-        )
-
-        for log in logs:
-
-            print(
-                f"時刻: {log.timestamp}"
-            )
-
-            print(
-                f"ユーザー: {log.username}"
-            )
-
-            print(
-                f"変数: {log.var}"
-            )
-
-            print(
-                f"種類: {log.type}"
-            )
-
-            print(
-                f"値: {log.value}"
-            )
-
-            print(
-                "--------------------------------"
-            )
 
     except Exception as e:
 
         print()
         print(
-            "❌ Cloudログ取得エラー"
+            "❌ set_var() でエラーが発生しました"
         )
 
         print(
-            f"種類: {type(e).__name__}"
+            f"エラー種類: {type(e).__name__}"
         )
 
         print(
-            f"内容: {e}"
+            f"エラー内容: {e}"
         )
+
+        raise
+
+    # -----------------------------------------------------
+    # 終了
+    #
+    # get_var() は使わない
+    # -----------------------------------------------------
+
+    print()
+    print(
+        "Scratch側で確認してください。"
+    )
+
+    print()
+    print(
+        f"☁ {CLOUD_VARIABLE}"
+    )
+
+    print(
+        f"期待値: {TEST_VALUE}"
+    )
 
     # -----------------------------------------------------
     # 切断
@@ -174,6 +230,11 @@ def main():
     try:
 
         cloud.disconnect()
+
+        print()
+        print(
+            "Scratch Cloudから切断しました。"
+        )
 
     except Exception:
 
@@ -190,4 +251,5 @@ def main():
 # =========================================================
 
 if __name__ == "__main__":
+
     main()
