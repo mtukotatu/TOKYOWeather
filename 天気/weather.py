@@ -87,15 +87,22 @@ def get_weather():
 
             weather = weather_list[0]
 
+            # -------------------------------------------------
             # 気象庁コード
+            # -------------------------------------------------
+
             if code_list:
 
                 try:
+
                     weather_code = int(
                         code_list[0]
                     )
 
-                except (ValueError, TypeError):
+                except (
+                    ValueError,
+                    TypeError
+                ):
 
                     weather_code = 2
 
@@ -119,7 +126,7 @@ def get_weather():
             return weather, weather_code
 
     # -----------------------------------------------------
-    # 見つからなかった場合
+    # 東京地方が見つからなかった場合
     # -----------------------------------------------------
 
     print()
@@ -163,6 +170,7 @@ def convert_weather_code(
 
     # None対策
     if weather is None:
+
         return 2
 
     # 文字列化
@@ -216,7 +224,9 @@ def convert_weather_code(
 def connect_scratch():
 
     print()
-    print("Scratchに接続しています...")
+    print(
+        "Scratchに接続しています..."
+    )
 
     # -----------------------------------------------------
     # Secrets確認
@@ -244,9 +254,6 @@ def connect_scratch():
 
     # -----------------------------------------------------
     # Scratchログイン
-    #
-    # Session(SESSION_ID)ではなく
-    # login_by_id()を使用
     # -----------------------------------------------------
 
     try:
@@ -363,6 +370,7 @@ def update_cloud_variable(
             CLOUD_VARIABLE
         )
 
+        print()
         print(
             f"変更前の {CLOUD_VARIABLE}: "
             f"{before}"
@@ -370,18 +378,26 @@ def update_cloud_variable(
 
     except Exception as e:
 
+        before = None
+
+        print()
         print(
-            "変更前の値を取得できませんでした:"
+            "⚠️ 変更前の値を取得できませんでした"
         )
 
         print(
-            f"{type(e).__name__}: {e}"
+            f"エラー種類: {type(e).__name__}"
+        )
+
+        print(
+            f"エラー内容: {e}"
         )
 
     # -----------------------------------------------------
-    # クラウド変数へ書き込み
+    # 書き込み
     # -----------------------------------------------------
 
+    print()
     print(
         f"{CLOUD_VARIABLE} に "
         f"{value} を送信します..."
@@ -395,7 +411,7 @@ def update_cloud_variable(
         )
 
         print(
-            "set_var() を実行しました！"
+            "✅ set_var() を実行しました！"
         )
 
     except Exception as e:
@@ -406,7 +422,7 @@ def update_cloud_variable(
         )
 
         print(
-            "クラウド変数書き込みエラー"
+            "❌ クラウド変数書き込みエラー"
         )
 
         print(
@@ -424,87 +440,164 @@ def update_cloud_variable(
         print(
             "================================"
         )
+
+        try:
+            cloud.disconnect()
+        except Exception:
+            pass
 
         raise
 
     # -----------------------------------------------------
-    # 少し待つ
+    # Scratch側への反映を確認
+    # 最大20秒
     # -----------------------------------------------------
 
+    print()
     print(
-        "Scratch側への反映を待っています..."
+        "Scratch側への反映を確認しています..."
     )
 
-    time.sleep(2)
+    after = None
+
+    success = False
+
+    for attempt in range(1, 11):
+
+        # 2秒待つ
+        time.sleep(2)
+
+        try:
+
+            after = cloud.get_var(
+                CLOUD_VARIABLE
+            )
+
+            print(
+                f"[{attempt}/10] "
+                f"{CLOUD_VARIABLE} = {after}"
+            )
+
+            # -------------------------------------------------
+            # 正しく反映された
+            # -------------------------------------------------
+
+            if str(after) == str(value):
+
+                print()
+                print(
+                    "================================"
+                )
+
+                print(
+                    "✅ クラウド変数の更新を確認しました！"
+                )
+
+                print(
+                    "================================"
+                )
+
+                success = True
+
+                break
+
+        except Exception as e:
+
+            print(
+                f"[{attempt}/10] "
+                f"取得エラー"
+            )
+
+            print(
+                f"エラー種類: {type(e).__name__}"
+            )
+
+            print(
+                f"エラー内容: {e}"
+            )
 
     # -----------------------------------------------------
-    # 書き込んだ値を読み返す
+    # 最終結果
     # -----------------------------------------------------
 
-    try:
+    if not success:
 
-        after = cloud.get_var(
-            CLOUD_VARIABLE
+        print()
+        print(
+            "================================"
         )
 
         print(
-            f"変更後の {CLOUD_VARIABLE}: "
-            f"{after}"
-        )
-
-        if str(after) == str(value):
-
-            print()
-            print(
-                "✅ クラウド変数の更新を確認しました！"
-            )
-
-        else:
-
-            print()
-            print(
-                "⚠️ 書き込み後の値が一致しません！"
-            )
-
-            print(
-                f"期待値: {value}"
-            )
-
-            print(
-                f"実際の値: {after}"
-            )
-
-    except Exception as e:
-
-        print(
-            "書き込み後の値を取得できませんでした"
+            "⚠️ クラウド変数の更新を確認できませんでした"
         )
 
         print(
-            f"エラー種類: {type(e).__name__}"
+            "================================"
         )
 
         print(
-            f"エラー内容: {e}"
+            f"期待値: {value}"
+        )
+
+        print(
+            f"最後に取得した値: {after}"
+        )
+
+        print()
+        print(
+            "考えられる原因:"
+        )
+
+        print(
+            "1. Scratch側の変数がクラウド変数ではない"
+        )
+
+        print(
+            "2. プロジェクトIDが違う"
+        )
+
+        print(
+            "3. クラウド変数名が違う"
+        )
+
+        print(
+            "4. SCRATCH_SESSION_IDのアカウントが"
+        )
+
+        print(
+            "   プロジェクトを所有していない"
+        )
+
+        print(
+            "5. Scratchクラウドサーバーとの"
+        )
+
+        print(
+            "   通信が正常に確立できていない"
         )
 
     # -----------------------------------------------------
     # 切断
     # -----------------------------------------------------
 
-    finally:
+    try:
 
-        try:
+        cloud.disconnect()
 
-            cloud.disconnect()
+        print()
+        print(
+            "Scratchクラウドから切断しました"
+        )
 
-            print(
-                "Scratchクラウドから切断しました"
-            )
+    except Exception:
 
-        except Exception:
+        pass
 
-            pass
+    # -----------------------------------------------------
+    # 呼び出し元へ結果を返す
+    # -----------------------------------------------------
+
+    return success
 
 
 # =========================================================
@@ -566,7 +659,7 @@ def main():
     )
 
     # -----------------------------------------------------
-    # Scratchへログイン
+    # Scratchログイン
     # -----------------------------------------------------
 
     session = connect_scratch()
@@ -575,7 +668,7 @@ def main():
     # クラウド変数更新
     # -----------------------------------------------------
 
-    update_cloud_variable(
+    success = update_cloud_variable(
         session,
         weather_code
     )
@@ -589,13 +682,29 @@ def main():
         "================================"
     )
 
-    print(
-        "東京の天気をScratchへ送信しました！"
-    )
+    if success:
 
-    print(
-        f"送信値: {weather_code}"
-    )
+        print(
+            "🎉 東京の天気をScratchへ送信しました！"
+        )
+
+        print(
+            f"送信値: {weather_code}"
+        )
+
+    else:
+
+        print(
+            "⚠️ 天気コードの送信処理は終了しましたが、"
+        )
+
+        print(
+            "Scratch側での反映を確認できませんでした。"
+        )
+
+        print(
+            f"送信しようとした値: {weather_code}"
+        )
 
     print(
         "================================"
