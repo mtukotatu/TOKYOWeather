@@ -11,6 +11,11 @@ print(
     getattr(sa, "__version__", "unknown")
 )
 
+print(
+    "Scratch username:",
+    session.get_linked_user().username
+)
+
 PROJECT_ID = "1368672819"
 SESSION_ID = os.environ.get("SCRATCH_SESSION_ID")
 
