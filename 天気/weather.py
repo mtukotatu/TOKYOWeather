@@ -6,6 +6,10 @@ import scratchattach as sa
 # =========================================================
 # 設定
 # =========================================================
+print(
+    "scratchattach version:",
+    getattr(sa, "__version__", "unknown")
+)
 
 PROJECT_ID = "1368672819"
 SESSION_ID = os.environ.get("SCRATCH_SESSION_ID")
